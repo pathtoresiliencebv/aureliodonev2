@@ -23,21 +23,33 @@ export async function GET(
       const subdomain = domain.split('.')[0]
       
       // Find store by subdomain
-      const stores = await storeModuleService.listStores({
-        metadata: { subdomain }
-      })
+    const stores = await storeModuleService.listStores({
+      // Note: metadata filtering may need to be done via RemoteQuery
+      // For now, we'll get all stores and filter manually
+    })
+    
+    // Filter stores by subdomain in metadata
+    const matchingStores = stores.filter(store => 
+      store.metadata?.subdomain === subdomain
+    )
       
-      if (stores.length > 0) {
-        tenantStore = stores[0]
+      if (matchingStores.length > 0) {
+        tenantStore = matchingStores[0]
       }
     } else {
       // Check for custom domain
       const stores = await storeModuleService.listStores({
-        metadata: { custom_domain: domain }
+        // Note: metadata filtering may need to be done via RemoteQuery
+        // For now, we'll get all stores and filter manually
       })
       
-      if (stores.length > 0) {
-        tenantStore = stores[0]
+      // Filter stores by custom_domain in metadata
+      const matchingStores = stores.filter(store => 
+        store.metadata?.custom_domain === domain
+      )
+      
+      if (matchingStores.length > 0) {
+        tenantStore = matchingStores[0]
       }
     }
 

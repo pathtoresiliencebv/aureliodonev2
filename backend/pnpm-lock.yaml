@@ -68,6 +68,9 @@ importers:
       resend:
         specifier: 4.0.1
         version: 4.0.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      stripe:
+        specifier: ^19.1.0
+        version: 19.1.0(@types/node@20.19.9)
       ulid:
         specifier: ^2.3.0
         version: 2.4.0
@@ -6942,6 +6945,15 @@ packages:
   stripe@15.12.0:
     resolution: {integrity: sha512-slTbYS1WhRJXVB8YXU8fgHizkUrM9KJyrw4Dd8pLEwzKHYyQTIE46EePC2MVbSDZdE24o1GdNtzmJV4PrPpmJA==}
     engines: {node: '>=12.*'}
+
+  stripe@19.1.0:
+    resolution: {integrity: sha512-FjgIiE98dMMTNssfdjMvFdD4eZyEzdWAOwPYqzhPRNZeg9ggFWlPXmX1iJKD5pPIwZBaPlC3SayQQkwsPo6/YQ==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      '@types/node': '>=16'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
 
   strnum@1.1.2:
     resolution: {integrity: sha512-vrN+B7DBIoTTZjnPNewwhx6cBA/H+IS7rfW68n7XxC1y7uoiGQBxaKzqucGUgavX15dJgiGztLJ8vxuEzwqBdA==}
@@ -16037,6 +16049,12 @@ snapshots:
     dependencies:
       '@types/node': 20.19.9
       qs: 6.14.0
+
+  stripe@19.1.0(@types/node@20.19.9):
+    dependencies:
+      qs: 6.14.0
+    optionalDependencies:
+      '@types/node': 20.19.9
 
   strnum@1.1.2: {}
 

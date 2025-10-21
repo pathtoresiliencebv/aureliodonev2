@@ -26,7 +26,7 @@ const updateStoreMetadataStep = createStep(
     
     const store = await storeModuleService.retrieveStore(input.storeId)
     
-    const updatedStore = await storeModuleService.updateStores([input.storeId], {
+    const updatedStore = await storeModuleService.updateStores(input.storeId, {
       metadata: {
         ...store.metadata,
         plan: input.newPlan,
@@ -35,7 +35,7 @@ const updateStoreMetadataStep = createStep(
       }
     })
 
-    return new StepResponse({ store: updatedStore[0] }, input.storeId)
+    return new StepResponse({ store: updatedStore }, input.storeId)
   },
   async (storeId, { container }) => {
     if (!storeId) return
@@ -44,7 +44,7 @@ const updateStoreMetadataStep = createStep(
     const storeModuleService = container.resolve(Modules.STORE)
     const store = await storeModuleService.retrieveStore(storeId)
     
-    await storeModuleService.updateStores([storeId], {
+    await storeModuleService.updateStores(storeId, {
       metadata: {
         ...store.metadata,
         plan: store.metadata.plan, // Revert to original plan
@@ -80,7 +80,7 @@ const sendPlanChangeNotificationStep = createStep(
     const store = await storeModuleService.retrieveStore(input.storeId)
     const ownerEmail = store.metadata.owner_email
     
-    await notificationModuleService.sendNotification({
+    await notificationModuleService.createNotifications({
       to: ownerEmail,
       channel: "email",
       template: "plan-changed",

@@ -46,7 +46,11 @@ export async function PATCH(
 ): Promise<void> {
   try {
     const { id } = req.params
-    const { plan, customDomain, branding } = req.body
+    const { plan, customDomain, branding } = req.body as {
+      plan?: string
+      customDomain?: string
+      branding?: any
+    }
 
     const storeModuleService = req.scope.resolve(Modules.STORE)
     const store = await storeModuleService.retrieveStore(id)
@@ -99,12 +103,12 @@ export async function PATCH(
     }
 
     if (Object.keys(updateData).length > 0) {
-      const updatedStore = await storeModuleService.updateStores([id], updateData)
+      const updatedStore = await storeModuleService.updateStores(id, updateData)
       
       res.json({
         success: true,
         tenant: {
-          id: updatedStore[0].id,
+          id: updatedStore.id,
           ...updateData.metadata
         }
       })
@@ -137,7 +141,7 @@ export async function DELETE(
     }
 
     // Deactivate tenant instead of deleting
-    await storeModuleService.updateStores([id], {
+    await storeModuleService.updateStores(id, {
       metadata: {
         ...store.metadata,
         status: "suspended",

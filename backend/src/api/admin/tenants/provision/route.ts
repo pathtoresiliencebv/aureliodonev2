@@ -6,7 +6,13 @@ export async function POST(
   res: MedusaResponse
 ): Promise<void> {
   try {
-    const { email, password, storeName, subdomain, plan } = req.body
+    const { email, password, storeName, subdomain, plan } = req.body as {
+      email: string
+      password: string
+      storeName: string
+      subdomain: string
+      plan: string
+    }
 
     // Validate required fields
     if (!email || !password || !storeName || !subdomain || !plan) {

@@ -146,7 +146,7 @@ async function trackUsage(req: MedusaRequest, tracking: any) {
     }
 
     // Update store with new usage
-    await storeModuleService.updateStores([tenantContext.storeId], {
+    await storeModuleService.updateStores(tenantContext.storeId, {
       metadata: {
         ...store.metadata,
         usage: updatedUsage,

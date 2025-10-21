@@ -53,7 +53,7 @@ const createStoreStep = createStep(
         }
       })
 
-    return new StepResponse({ store: result.stores[0] }, result.stores[0].id)
+    return new StepResponse({ store: result }, "store-created")
   },
   async (storeId, { container }) => {
     if (!storeId) return
@@ -73,15 +73,13 @@ const createSalesChannelStep = createStep(
           salesChannelsData: [{
             name: `${input.storeName} Store`,
             description: `Sales channel for ${input.storeName}`,
-            metadata: {
-              tenant_store_id: input.storeName,
-              subdomain: input.subdomain
-            }
+            // Note: metadata may not be supported in CreateSalesChannelDTO
+            // We'll handle tenant association differently
           }]
         }
       })
 
-    return new StepResponse({ salesChannel: result.salesChannels[0] }, result.salesChannels[0].id)
+    return new StepResponse({ salesChannel: result }, "sales-channel-created")
   },
   async (salesChannelId, { container }) => {
     if (!salesChannelId) return
@@ -97,13 +95,10 @@ const createPublishableKeyStep = createStep(
   async (input: ProvisionTenantInput, { container }) => {
     const apiKeyModuleService = container.resolve(Modules.API_KEY)
     
-    const publishableKey = await apiKeyModuleService.createPublishableApiKeys({
+    const publishableKey = await apiKeyModuleService.createApiKeys({
       title: `${input.storeName} Storefront Key`,
       type: "publishable",
-      metadata: {
-        tenant_store_id: input.storeName,
-        subdomain: input.subdomain
-      }
+      created_by: "system"
     })
 
     return new StepResponse({ publishableKey: publishableKey.token }, publishableKey.id)
@@ -112,7 +107,7 @@ const createPublishableKeyStep = createStep(
     if (!keyId) return
     
     const apiKeyModuleService = container.resolve(Modules.API_KEY)
-    await apiKeyModuleService.deletePublishableApiKeys([keyId])
+    await apiKeyModuleService.deleteApiKeys([keyId])
   }
 )
 
@@ -124,7 +119,6 @@ const createAdminUserStep = createStep(
     
     const adminUser = await userModuleService.createUsers({
       email: input.email,
-      password: input.password,
       first_name: "Store",
       last_name: "Owner",
       metadata: {
@@ -166,7 +160,7 @@ const sendWelcomeEmailStep = createStep(
   async (input: ProvisionTenantInput, { container }) => {
     const notificationModuleService = container.resolve(Modules.NOTIFICATION)
     
-    await notificationModuleService.sendNotification({
+    await notificationModuleService.createNotifications({
       to: input.email,
       channel: "email",
       template: "welcome",

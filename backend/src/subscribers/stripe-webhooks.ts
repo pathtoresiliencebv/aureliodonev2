@@ -14,7 +14,10 @@ export default async function stripeWebhookHandler({
   const notificationModuleService = container.resolve(Modules.NOTIFICATION)
 
   try {
-    const { type, data } = event.data
+    const { type, data } = event.data as {
+      type: string
+      data: any
+    }
 
     switch (type) {
       case "invoice.payment_succeeded":

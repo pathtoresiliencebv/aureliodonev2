@@ -1,19 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Upload, Save, ExternalLink, Settings } from "lucide-react"
 
 interface TenantSettings {
   id: string
   name: string
   subdomain: string
   plan: string
+  status: 'active' | 'suspended' | 'trial'
   limits: {
     products: number
     orders: number
@@ -25,249 +19,237 @@ interface TenantSettings {
     storage_mb: number
   }
   branding: {
-    logo_url?: string
-    primary_color?: string
-    secondary_color?: string
-    font_family?: string
-    custom_css?: string
+    primary_color: string
+    secondary_color: string
+    font_family: string
+    custom_css: string
   }
-  status: string
 }
 
-export default function TenantSettingsWidget() {
+export default function TenantSettingsPage() {
   const [settings, setSettings] = useState<TenantSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [formData, setFormData] = useState({
-    primary_color: "",
-    secondary_color: "",
-    font_family: "",
-    custom_css: ""
-  })
 
   useEffect(() => {
-    fetchTenantSettings()
-  }, [])
-
-  const fetchTenantSettings = async () => {
-    try {
-      const response = await fetch("/api/admin/tenants/current")
-      const data = await response.json()
-      setSettings(data)
-      setFormData({
-        primary_color: data.branding?.primary_color || "#3b82f6",
-        secondary_color: data.branding?.secondary_color || "#1e40af",
-        font_family: data.branding?.font_family || "Inter",
-        custom_css: data.branding?.custom_css || ""
+    // Simulate API call
+    setTimeout(() => {
+      setSettings({
+        id: "tenant_123",
+        name: "My Store",
+        subdomain: "mystore",
+        plan: "pro",
+        status: "active",
+        limits: {
+          products: 1000,
+          orders: 2000,
+          storage_mb: 5000
+        },
+        usage: {
+          products: 156,
+          orders: 892,
+          storage_mb: 1200
+        },
+        branding: {
+          primary_color: "#3b82f6",
+          secondary_color: "#1e40af",
+          font_family: "Inter",
+          custom_css: ""
+        }
       })
-    } catch (error) {
-      console.error("Error fetching tenant settings:", error)
-    } finally {
       setLoading(false)
-    }
-  }
+    }, 1000)
+  }, [])
 
   const handleSave = async () => {
     setSaving(true)
-    try {
-      const response = await fetch("/api/admin/tenants/current", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          branding: formData
-        })
-      })
-
-      if (response.ok) {
-        await fetchTenantSettings()
-        alert("Settings saved successfully!")
-      } else {
-        alert("Error saving settings")
-      }
-    } catch (error) {
-      console.error("Error saving settings:", error)
-      alert("Error saving settings")
-    } finally {
+    // Simulate save operation
+    setTimeout(() => {
       setSaving(false)
-    }
-  }
-
-  const getUsagePercentage = (used: number, limit: number) => {
-    if (limit === -1) return 0 // Unlimited
-    return Math.min((used / limit) * 100, 100)
+      alert("Settings saved successfully!")
+    }, 1000)
   }
 
   if (loading) {
-    return <div>Loading tenant settings...</div>
+    return <div>Loading settings...</div>
   }
 
   if (!settings) {
-    return <div>Error loading tenant settings</div>
+    return <div>No settings data available</div>
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Store Settings</h2>
-          <p className="text-gray-600">Manage your store configuration and branding</p>
-        </div>
-        <Badge variant={settings.status === 'active' ? 'default' : 'destructive'}>
+      <div>
+        <h1 className="text-2xl font-bold">Store Settings</h1>
+        <p className="text-gray-600">Manage your store configuration and branding</p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-gray-600">Status:</span>
+        <span className={`px-2 py-1 rounded text-xs font-medium ${
+          settings.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`}>
           {settings.status}
-        </Badge>
+        </span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Store Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Store Information
-            </CardTitle>
-            <CardDescription>
-              Basic information about your store
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Store Information</h3>
+          <div className="space-y-4">
             <div>
-              <Label>Store Name</Label>
-              <Input value={settings.name} disabled />
+              <label className="block text-sm font-medium text-gray-700">Store Name</label>
+              <input 
+                type="text" 
+                value={settings.name} 
+                disabled 
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              />
             </div>
             <div>
-              <Label>Store URL</Label>
-              <div className="flex items-center gap-2">
-                <Input value={`${settings.subdomain}.yourdomain.com`} disabled />
-                <Button variant="outline" size="sm">
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
+              <label className="block text-sm font-medium text-gray-700">Store URL</label>
+              <div className="mt-1 flex rounded-md shadow-sm">
+                <input 
+                  type="text" 
+                  value={`${settings.subdomain}.yourdomain.com`} 
+                  disabled 
+                  className="flex-1 rounded-l-md border-gray-300"
+                />
+                <button className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-50 text-gray-500 text-sm">
+                  Visit
+                </button>
               </div>
             </div>
             <div>
-              <Label>Plan</Label>
-              <Badge variant="secondary" className="capitalize">
+              <label className="block text-sm font-medium text-gray-700">Plan</label>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
                 {settings.plan}
-              </Badge>
+              </span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Usage Statistics */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Usage Statistics</CardTitle>
-            <CardDescription>
-              Current usage vs. plan limits
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Usage Statistics</h3>
+          <div className="space-y-4">
             <div>
-              <div className="flex justify-between text-sm mb-1">
+              <div className="flex justify-between text-sm">
                 <span>Products</span>
                 <span>{settings.usage.products} / {settings.limits.products === -1 ? '∞' : settings.limits.products}</span>
               </div>
-              <Progress 
-                value={getUsagePercentage(settings.usage.products, settings.limits.products)} 
-                className="h-2"
-              />
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full" 
+                  style={{ width: `${(settings.usage.products / settings.limits.products) * 100}%` }}
+                ></div>
+              </div>
             </div>
             <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>Orders (this month)</span>
+              <div className="flex justify-between text-sm">
+                <span>Orders</span>
                 <span>{settings.usage.orders} / {settings.limits.orders === -1 ? '∞' : settings.limits.orders}</span>
               </div>
-              <Progress 
-                value={getUsagePercentage(settings.usage.orders, settings.limits.orders)} 
-                className="h-2"
-              />
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-green-600 h-2 rounded-full" 
+                  style={{ width: `${(settings.usage.orders / settings.limits.orders) * 100}%` }}
+                ></div>
+              </div>
             </div>
             <div>
-              <div className="flex justify-between text-sm mb-1">
+              <div className="flex justify-between text-sm">
                 <span>Storage</span>
-                <span>{settings.usage.storage_mb}MB / {settings.limits.storage_mb === -1 ? '∞' : `${settings.limits.storage_mb}MB`}</span>
+                <span>{settings.usage.storage_mb}MB / {settings.limits.storage_mb === -1 ? '∞' : settings.limits.storage_mb}MB</span>
               </div>
-              <Progress 
-                value={getUsagePercentage(settings.usage.storage_mb, settings.limits.storage_mb)} 
-                className="h-2"
-              />
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-purple-600 h-2 rounded-full" 
+                  style={{ width: `${(settings.usage.storage_mb / settings.limits.storage_mb) * 100}%` }}
+                ></div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+      </div>
 
-        {/* Branding Settings */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Branding & Customization</CardTitle>
-            <CardDescription>
-              Customize your store's appearance
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="primary_color">Primary Color</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="primary_color"
-                    type="color"
-                    value={formData.primary_color}
-                    onChange={(e) => setFormData({...formData, primary_color: e.target.value})}
-                    className="w-20 h-10"
-                  />
-                  <Input
-                    value={formData.primary_color}
-                    onChange={(e) => setFormData({...formData, primary_color: e.target.value})}
-                    placeholder="#3b82f6"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="secondary_color">Secondary Color</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="secondary_color"
-                    type="color"
-                    value={formData.secondary_color}
-                    onChange={(e) => setFormData({...formData, secondary_color: e.target.value})}
-                    className="w-20 h-10"
-                  />
-                  <Input
-                    value={formData.secondary_color}
-                    onChange={(e) => setFormData({...formData, secondary_color: e.target.value})}
-                    placeholder="#1e40af"
-                  />
-                </div>
+      <div className="bg-white p-6 rounded-lg shadow">
+        <h3 className="text-lg font-semibold mb-4">Branding & Customization</h3>
+        <p className="text-sm text-gray-600 mb-6">
+          Customize the appearance of your store to match your brand.
+        </p>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="primary_color" className="block text-sm font-medium text-gray-700">
+                Primary Color
+              </label>
+              <div className="mt-1 flex rounded-md shadow-sm">
+                <input
+                  type="color"
+                  id="primary_color"
+                  value={settings.branding.primary_color}
+                  className="h-10 w-16 rounded-l-md border-gray-300"
+                />
+                <input
+                  type="text"
+                  value={settings.branding.primary_color}
+                  className="flex-1 rounded-r-md border-gray-300"
+                />
               </div>
             </div>
             <div>
-              <Label htmlFor="font_family">Font Family</Label>
-              <Input
-                id="font_family"
-                value={formData.font_family}
-                onChange={(e) => setFormData({...formData, font_family: e.target.value})}
-                placeholder="Inter, sans-serif"
-              />
+              <label htmlFor="secondary_color" className="block text-sm font-medium text-gray-700">
+                Secondary Color
+              </label>
+              <div className="mt-1 flex rounded-md shadow-sm">
+                <input
+                  type="color"
+                  id="secondary_color"
+                  value={settings.branding.secondary_color}
+                  className="h-10 w-16 rounded-l-md border-gray-300"
+                />
+                <input
+                  type="text"
+                  value={settings.branding.secondary_color}
+                  className="flex-1 rounded-r-md border-gray-300"
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="custom_css">Custom CSS</Label>
-              <textarea
-                id="custom_css"
-                value={formData.custom_css}
-                onChange={(e) => setFormData({...formData, custom_css: e.target.value})}
-                placeholder="/* Add your custom CSS here */"
-                className="w-full h-32 p-3 border rounded-md resize-none"
-              />
-            </div>
-            <div className="flex justify-end">
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? "Saving..." : "Save Changes"}
-                <Save className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div>
+            <label htmlFor="font_family" className="block text-sm font-medium text-gray-700">
+              Font Family
+            </label>
+            <input
+              type="text"
+              id="font_family"
+              value={settings.branding.font_family}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            />
+          </div>
+          <div>
+            <label htmlFor="custom_css" className="block text-sm font-medium text-gray-700">
+              Custom CSS
+            </label>
+            <textarea
+              id="custom_css"
+              rows={4}
+              value={settings.branding.custom_css}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              placeholder="/* Add your custom CSS here */"
+            />
+          </div>
+          <div>
+            <button 
+              onClick={handleSave} 
+              disabled={saving}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )

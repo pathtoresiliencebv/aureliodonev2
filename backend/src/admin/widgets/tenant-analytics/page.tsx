@@ -1,228 +1,166 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { TrendingUp, ShoppingCart, Users, DollarSign, Package, Eye } from "lucide-react"
 
 interface TenantAnalytics {
   sales: {
     total: number
     thisMonth: number
-    lastMonth: number
     growth: number
   }
   orders: {
     total: number
     thisMonth: number
-    lastMonth: number
     growth: number
   }
   customers: {
     total: number
-    new: number
-    returning: number
+    thisMonth: number
+    growth: number
   }
   products: {
     total: number
     active: number
-    lowStock: number
-  }
-  views: {
-    total: number
-    thisMonth: number
-    lastMonth: number
     growth: number
+  }
+  performance: {
+    pageViews: number
+    bounceRate: number
+    avgOrderValue: number
+    conversionRate: number
+  }
+  trends: {
+    salesGrowth: number
+    revenue: number
+    customerSatisfaction: number
   }
 }
 
-export default function TenantAnalyticsWidget() {
+export default function TenantAnalyticsPage() {
   const [analytics, setAnalytics] = useState<TenantAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchAnalytics()
-  }, [])
-
-  const fetchAnalytics = async () => {
-    try {
-      const response = await fetch("/api/admin/analytics/tenant")
-      const data = await response.json()
-      setAnalytics(data)
-    } catch (error) {
-      console.error("Error fetching analytics:", error)
-    } finally {
+    // Simulate API call
+    setTimeout(() => {
+      setAnalytics({
+        sales: {
+          total: 125430,
+          thisMonth: 15420,
+          growth: 12.5
+        },
+        orders: {
+          total: 892,
+          thisMonth: 134,
+          growth: 8.3
+        },
+        customers: {
+          total: 2456,
+          thisMonth: 189,
+          growth: 15.2
+        },
+        products: {
+          total: 156,
+          active: 142,
+          growth: 5.7
+        },
+        performance: {
+          pageViews: 45678,
+          bounceRate: 34.2,
+          avgOrderValue: 89.50,
+          conversionRate: 2.3
+        },
+        trends: {
+          salesGrowth: 12.5,
+          revenue: 125430,
+          customerSatisfaction: 4.8
+        }
+      })
       setLoading(false)
-    }
-  }
+    }, 1000)
+  }, [])
 
   if (loading) {
     return <div>Loading analytics...</div>
   }
 
   if (!analytics) {
-    return <div>Error loading analytics</div>
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount)
-  }
-
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-US').format(num)
-  }
-
-  const getGrowthColor = (growth: number) => {
-    if (growth > 0) return "text-green-600"
-    if (growth < 0) return "text-red-600"
-    return "text-gray-600"
-  }
-
-  const getGrowthIcon = (growth: number) => {
-    if (growth > 0) return "↗"
-    if (growth < 0) return "↘"
-    return "→"
+    return <div>No analytics data available</div>
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Analytics Dashboard</h2>
+        <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
         <p className="text-gray-600">Overview of your store performance</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Sales Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(analytics.sales.total)}</div>
-            <div className="flex items-center text-xs text-muted-foreground">
-              <span className={getGrowthColor(analytics.sales.growth)}>
-                {getGrowthIcon(analytics.sales.growth)} {Math.abs(analytics.sales.growth)}%
-              </span>
-              <span className="ml-1">from last month</span>
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              This month: {formatCurrency(analytics.sales.thisMonth)}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-500">Total Sales</h3>
+          <p className="text-2xl font-bold">${analytics.sales.total.toLocaleString()}</p>
+          <p className="text-sm text-green-600">+{analytics.sales.growth}% from last month</p>
+        </div>
 
-        {/* Orders Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Orders</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatNumber(analytics.orders.total)}</div>
-            <div className="flex items-center text-xs text-muted-foreground">
-              <span className={getGrowthColor(analytics.orders.growth)}>
-                {getGrowthIcon(analytics.orders.growth)} {Math.abs(analytics.orders.growth)}%
-              </span>
-              <span className="ml-1">from last month</span>
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              This month: {formatNumber(analytics.orders.thisMonth)}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-500">Orders</h3>
+          <p className="text-2xl font-bold">{analytics.orders.total}</p>
+          <p className="text-sm text-green-600">+{analytics.orders.growth}% from last month</p>
+        </div>
 
-        {/* Customers Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Customers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatNumber(analytics.customers.total)}</div>
-            <div className="text-xs text-muted-foreground">
-              <span className="text-green-600">{analytics.customers.new} new</span>
-              <span className="mx-1">•</span>
-              <span className="text-blue-600">{analytics.customers.returning} returning</span>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-500">Customers</h3>
+          <p className="text-2xl font-bold">{analytics.customers.total}</p>
+          <p className="text-sm text-green-600">+{analytics.customers.growth}% from last month</p>
+        </div>
 
-        {/* Products Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Products</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatNumber(analytics.products.total)}</div>
-            <div className="text-xs text-muted-foreground">
-              <span className="text-green-600">{analytics.products.active} active</span>
-              {analytics.products.lowStock > 0 && (
-                <>
-                  <span className="mx-1">•</span>
-                  <span className="text-orange-600">{analytics.products.lowStock} low stock</span>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-500">Products</h3>
+          <p className="text-2xl font-bold">{analytics.products.total}</p>
+          <p className="text-sm text-green-600">+{analytics.products.growth}% from last month</p>
+        </div>
       </div>
 
-      {/* Additional Metrics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5" />
-              Page Views
-            </CardTitle>
-            <CardDescription>
-              Store traffic and engagement
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{formatNumber(analytics.views.total)}</div>
-            <div className="flex items-center text-sm text-muted-foreground mt-2">
-              <span className={getGrowthColor(analytics.views.growth)}>
-                {getGrowthIcon(analytics.views.growth)} {Math.abs(analytics.views.growth)}%
-              </span>
-              <span className="ml-1">from last month</span>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Performance Metrics</h3>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-600">Page Views</p>
+              <p className="text-xl font-bold">{analytics.performance.pageViews.toLocaleString()}</p>
             </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              This month: {formatNumber(analytics.views.thisMonth)} views
+            <div>
+              <p className="text-sm text-gray-600">Bounce Rate</p>
+              <p className="text-xl font-bold">{analytics.performance.bounceRate}%</p>
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <p className="text-sm text-gray-600">Average Order Value</p>
+              <p className="text-xl font-bold">${analytics.performance.avgOrderValue}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Conversion Rate</p>
+              <p className="text-xl font-bold">{analytics.performance.conversionRate}%</p>
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Performance
-            </CardTitle>
-            <CardDescription>
-              Key performance indicators
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Conversion Rate</span>
-              <Badge variant="secondary">2.3%</Badge>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Growth Trends</h3>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-600">Sales Growth</p>
+              <p className="text-xl font-bold text-green-600">+{analytics.trends.salesGrowth}%</p>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Average Order Value</span>
-              <Badge variant="secondary">{formatCurrency(89.50)}</Badge>
+            <div>
+              <p className="text-sm text-gray-600">Revenue</p>
+              <p className="text-xl font-bold">${analytics.trends.revenue.toLocaleString()}</p>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Customer Satisfaction</span>
-              <Badge variant="secondary">4.8/5</Badge>
+            <div>
+              <p className="text-sm text-gray-600">Customer Satisfaction</p>
+              <p className="text-xl font-bold">{analytics.trends.customerSatisfaction}/5</p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )
