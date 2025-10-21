@@ -134,7 +134,7 @@ export class BillingService extends BaseService {
   }
 
   // Helper method to validate webhook signature
-  constructWebhookEvent(payload: string, signature: string, secret: string) {
+  constructWebhookEvent(payload: string | Buffer, signature: string, secret: string) {
     try {
       return this.stripe.webhooks.constructEvent(payload, signature, secret)
     } catch (error) {
