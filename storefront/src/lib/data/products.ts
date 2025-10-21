@@ -1,4 +1,4 @@
-import { sdk } from "@lib/config"
+import { getTenantSDK } from "@lib/tenant-sdk"
 import { HttpTypes } from "@medusajs/types"
 import { cache } from "react"
 import { getRegion } from "./regions"
@@ -12,6 +12,7 @@ export const getProductsById = cache(async function ({
   ids: string[]
   regionId: string
 }) {
+  const sdk = await getTenantSDK()
   return sdk.store.product
     .list(
       {
@@ -28,6 +29,7 @@ export const getProductByHandle = cache(async function (
   handle: string,
   regionId: string
 ) {
+  const sdk = await getTenantSDK()
   return sdk.store.product
     .list(
       {
@@ -64,6 +66,7 @@ export const getProductsList = cache(async function ({
       nextPage: null,
     }
   }
+  const sdk = await getTenantSDK()
   return sdk.store.product
     .list(
       {

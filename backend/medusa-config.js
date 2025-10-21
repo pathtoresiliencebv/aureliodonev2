@@ -75,6 +75,14 @@ const medusaConfig = {
         ]
       }
     },
+    {
+      key: 'billing',
+      resolve: './src/modules/billing',
+      options: {
+        stripeSecretKey: STRIPE_API_KEY,
+        webhookSecret: STRIPE_WEBHOOK_SECRET
+      }
+    },
     ...(REDIS_URL ? [{
       key: Modules.EVENT_BUS,
       resolve: '@medusajs/event-bus-redis',

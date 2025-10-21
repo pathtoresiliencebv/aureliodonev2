@@ -6,6 +6,12 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
 const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "us"
 
+// Tenant cache for performance
+const tenantCache = {
+  tenants: new Map<string, any>(),
+  lastUpdated: Date.now(),
+}
+
 const regionMapCache = {
   regionMap: new Map<string, HttpTypes.StoreRegion>(),
   regionMapUpdated: Date.now(),
@@ -85,9 +91,47 @@ async function getCountryCode(
 }
 
 /**
- * Middleware to handle region selection and onboarding status.
+ * Resolve tenant from hostname
+ */
+async function resolveTenant(hostname: string) {
+  // Check cache first
+  if (tenantCache.tenants.has(hostname)) {
+    return tenantCache.tenants.get(hostname)
+  }
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/store/tenant?domain=${hostname}`, {
+      headers: {
+        "x-publishable-api-key": PUBLISHABLE_API_KEY!,
+      },
+      next: {
+        revalidate: 3600,
+        tags: ["tenant"],
+      },
+    })
+
+    if (!response.ok) {
+      return null
+    }
+
+    const tenant = await response.json()
+    
+    // Cache the tenant
+    tenantCache.tenants.set(hostname, tenant)
+    tenantCache.lastUpdated = Date.now()
+    
+    return tenant
+  } catch (error) {
+    console.error("Error resolving tenant:", error)
+    return null
+  }
+}
+
+/**
+ * Middleware to handle tenant resolution, region selection and onboarding status.
  */
 export async function middleware(request: NextRequest) {
+  const hostname = request.headers.get("host") || ""
   const searchParams = request.nextUrl.searchParams
   const isOnboarding = searchParams.get("onboarding") === "true"
   const cartId = searchParams.get("cart_id")
@@ -95,8 +139,24 @@ export async function middleware(request: NextRequest) {
   const onboardingCookie = request.cookies.get("_medusa_onboarding")
   const cartIdCookie = request.cookies.get("_medusa_cart_id")
 
-  const regionMap = await getRegionMap()
+  // Resolve tenant from hostname
+  const tenant = await resolveTenant(hostname)
+  
+  // If no tenant found, this might be the main SaaS site
+  if (!tenant) {
+    // Redirect to main SaaS site or show 404
+    if (hostname.includes('yourdomain.com') && !hostname.startsWith('www.')) {
+      return NextResponse.redirect(`https://www.yourdomain.com${request.nextUrl.pathname}`)
+    }
+    return NextResponse.next()
+  }
 
+  // Check if tenant is active
+  if (tenant.status !== 'active') {
+    return new NextResponse("Store is not available", { status: 403 })
+  }
+
+  const regionMap = await getRegionMap()
   const countryCode = regionMap && (await getCountryCode(request, regionMap))
 
   const urlHasCountryCode =
@@ -108,7 +168,12 @@ export async function middleware(request: NextRequest) {
     (!isOnboarding || onboardingCookie) &&
     (!cartId || cartIdCookie)
   ) {
-    return NextResponse.next()
+    // Set tenant cookies and continue
+    const response = NextResponse.next()
+    response.cookies.set("_tenant_id", tenant.id, { maxAge: 60 * 60 * 24 })
+    response.cookies.set("_tenant_store_id", tenant.id, { maxAge: 60 * 60 * 24 })
+    response.cookies.set("_tenant_publishable_key", tenant.publishableKey, { maxAge: 60 * 60 * 24 })
+    return response
   }
 
   const redirectPath =
@@ -137,6 +202,12 @@ export async function middleware(request: NextRequest) {
   if (isOnboarding) {
     response.cookies.set("_medusa_onboarding", "true", { maxAge: 60 * 60 * 24 })
   }
+
+  // Set tenant cookies
+  response.cookies.set("_tenant_id", tenant.id, { maxAge: 60 * 60 * 24 })
+  response.cookies.set("_tenant_store_id", tenant.id, { maxAge: 60 * 60 * 24 })
+  response.cookies.set("_tenant_publishable_key", tenant.publishableKey, { maxAge: 60 * 60 * 24 })
+  response.cookies.set("_tenant_theme", JSON.stringify(tenant.theme), { maxAge: 60 * 60 * 24 })
 
   return response
 }
