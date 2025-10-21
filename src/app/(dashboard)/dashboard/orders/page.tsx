@@ -1,8 +1,9 @@
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { OrderForm } from "./_components/OrderForm";
 import { 
   ShoppingBag, 
   Package, 
@@ -12,7 +13,8 @@ import {
   AlertCircle,
   Search,
   Filter,
-  Download
+  Download,
+  Plus
 } from "lucide-react";
 
 // Mock data for orders
@@ -131,6 +133,13 @@ function OrdersList() {
               <Button variant="outline" size="sm">
                 View Details
               </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleEditOrder(order)}
+              >
+                Edit Order
+              </Button>
               <Button variant="outline" size="sm">
                 Update Status
               </Button>
@@ -176,6 +185,41 @@ function OrdersListSkeleton() {
 }
 
 export default function OrdersPage() {
+  const [showForm, setShowForm] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
+
+  const handleAddOrder = () => {
+    setEditingOrder(null);
+    setShowForm(true);
+  };
+
+  const handleEditOrder = (order: any) => {
+    setEditingOrder(order);
+    setShowForm(true);
+  };
+
+  const handleFormSubmit = (data: any) => {
+    console.log("Order data:", data);
+    // TODO: Implement order creation/update logic
+    setShowForm(false);
+    setEditingOrder(null);
+  };
+
+  const handleFormCancel = () => {
+    setShowForm(false);
+    setEditingOrder(null);
+  };
+
+  if (showForm) {
+    return (
+      <OrderForm
+        order={editingOrder}
+        onSubmit={handleFormSubmit}
+        onCancel={handleFormCancel}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -197,6 +241,10 @@ export default function OrdersPage() {
           <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Export
+          </Button>
+          <Button onClick={handleAddOrder}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Order
           </Button>
         </div>
       </div>
