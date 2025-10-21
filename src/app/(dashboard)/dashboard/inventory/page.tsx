@@ -1,8 +1,9 @@
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InventoryForm } from "./_components/InventoryForm";
 import { 
   BarChart3, 
   AlertTriangle, 
@@ -11,7 +12,8 @@ import {
   Search,
   Filter,
   Download,
-  Plus
+  Plus,
+  Edit
 } from "lucide-react";
 
 // Mock data for inventory
@@ -132,6 +134,14 @@ function InventoryList() {
               <Button variant="outline" size="sm">
                 View History
               </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleEditInventory(item)}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -174,6 +184,41 @@ function InventoryListSkeleton() {
 }
 
 export default function InventoryPage() {
+  const [showForm, setShowForm] = useState(false);
+  const [editingInventory, setEditingInventory] = useState(null);
+
+  const handleAddInventory = () => {
+    setEditingInventory(null);
+    setShowForm(true);
+  };
+
+  const handleEditInventory = (inventory: any) => {
+    setEditingInventory(inventory);
+    setShowForm(true);
+  };
+
+  const handleFormSubmit = (data: any) => {
+    console.log("Inventory data:", data);
+    // TODO: Implement inventory creation/update logic
+    setShowForm(false);
+    setEditingInventory(null);
+  };
+
+  const handleFormCancel = () => {
+    setShowForm(false);
+    setEditingInventory(null);
+  };
+
+  if (showForm) {
+    return (
+      <InventoryForm
+        inventory={editingInventory}
+        onSubmit={handleFormSubmit}
+        onCancel={handleFormCancel}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -196,7 +241,7 @@ export default function InventoryPage() {
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button>
+          <Button onClick={handleAddInventory}>
             <Plus className="h-4 w-4 mr-2" />
             Add Stock
           </Button>
