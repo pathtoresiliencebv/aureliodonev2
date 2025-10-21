@@ -29,9 +29,13 @@ interface ResendEmailOptions {
   tags?: { name: string; value: string }[];
 }
 
-type EmailProvider = "resend" | "brevo" | "smtp" | null;
+type EmailProvider = "resend" | "brevo" | "smtp" | "sendgrid" | null;
 
 async function getEmailProvider(): Promise<EmailProvider> {
+  if (process.env.SENDGRID_API_KEY) {
+    return "sendgrid";
+  }
+
   if (process.env.RESEND_API_KEY) {
     return "resend";
   }
@@ -152,6 +156,50 @@ async function sendSMTPEmail({
   }
 }
 
+async function sendSendGridEmail({
+  to,
+  subject,
+  html,
+  text,
+  from,
+  replyTo
+}: {
+  to: string[];
+  subject: string;
+  html: string;
+  text?: string;
+  from?: string;
+  replyTo?: string;
+}) {
+  if (!process.env.SENDGRID_API_KEY) {
+    throw new Error("SENDGRID_API_KEY is not set");
+  }
+
+  const sgMail = require('@sendgrid/mail');
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+  const msg = {
+    to: to,
+    from: from || process.env.EMAIL_FROM || 'aureliolivingbv@gmail.com',
+    subject: subject,
+    html: html,
+    text: text,
+    replyTo: replyTo || process.env.EMAIL_REPLY_TO
+  };
+
+  try {
+    console.log(`📧 [SendGrid] Sending email to: ${to.join(', ')}`);
+    console.log(`📧 [SendGrid] Subject: ${subject}`);
+    
+    const result = await sgMail.send(msg);
+    console.log(`✅ [SendGrid] Email sent successfully`);
+    return result;
+  } catch (error) {
+    console.error(`❌ [SendGrid] Failed to send email:`, error);
+    throw error;
+  }
+}
+
 async function sendBrevoEmail({
   to,
   subject,
@@ -228,7 +276,13 @@ export async function sendPasswordResetEmail({
     throw new Error("No email provider configured. Set either RESEND_API_KEY or BREVO_API_KEY in your environment.");
   }
 
-  if (provider === "smtp") {
+  if (provider === "sendgrid") {
+    await sendSendGridEmail({
+      to: [email],
+      subject: `Reset your password for ${SITE_DOMAIN}`,
+      html,
+    });
+  } else if (provider === "smtp") {
     await sendSMTPEmail({
       to: [email],
       subject: `Reset your password for ${SITE_DOMAIN}`,
@@ -274,7 +328,13 @@ export async function sendVerificationEmail({
     throw new Error("No email provider configured. Set either RESEND_API_KEY or BREVO_API_KEY in your environment.");
   }
 
-  if (provider === "smtp") {
+  if (provider === "sendgrid") {
+    await sendSendGridEmail({
+      to: [email],
+      subject: `Verify your email for ${SITE_DOMAIN}`,
+      html,
+    });
+  } else if (provider === "smtp") {
     await sendSMTPEmail({
       to: [email],
       subject: `Verify your email for ${SITE_DOMAIN}`,
@@ -328,7 +388,13 @@ export async function sendTeamInvitationEmail({
     throw new Error("No email provider configured. Set either RESEND_API_KEY or BREVO_API_KEY in your environment.");
   }
 
-  if (provider === "smtp") {
+  if (provider === "sendgrid") {
+    await sendSendGridEmail({
+      to: [email],
+      subject: `You've been invited to join a team on ${SITE_DOMAIN}`,
+      html,
+    });
+  } else if (provider === "smtp") {
     await sendSMTPEmail({
       to: [email],
       subject: `You've been invited to join a team on ${SITE_DOMAIN}`,
