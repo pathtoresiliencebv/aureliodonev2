@@ -1,6 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { defineWidgetConfig } from "@medusajs/admin-sdk"
+
+export const config = defineWidgetConfig({
+  zone: "product.details.before",
+})
 
 interface TenantAnalytics {
   sales: {

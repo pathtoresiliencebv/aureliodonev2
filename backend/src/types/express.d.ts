@@ -56,4 +56,19 @@ declare module "@medusajs/framework" {
   }
 }
 
+// Also extend the MedusaRequest user property
+declare module "@medusajs/framework" {
+  interface MedusaRequest {
+    user?: {
+      customer_id?: string
+      userId?: string
+      metadata?: {
+        role?: string
+        tenant_store_id?: string
+        permissions?: string[]
+      }
+    }
+  }
+}
+
 export {}
