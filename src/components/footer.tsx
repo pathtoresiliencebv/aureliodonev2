@@ -3,7 +3,6 @@ import { SiX as XIcon, SiGithub as GithubIcon } from '@icons-pack/react-simple-i
 import ThemeSwitch from "@/components/theme-switch";
 import { GITHUB_REPO_URL, SITE_NAME } from "@/constants";
 import { Button } from "./ui/button";
-import AgenticDevStudioLogo from "./agenticdev-studio-logo";
 import { getGithubStars } from "@/utils/stats";
 import { Suspense } from "react";
 
@@ -85,16 +84,6 @@ export function Footer() {
 
                 <div className="flex items-center gap-4">
                   <ThemeSwitch />
-
-                  <a
-                    href="https://agenticdev.agency"
-                    target="_blank"
-                    className="flex items-center font-medium text-sm hover:text-foreground transition-colors"
-                  >
-                    <span className="whitespace-nowrap">Built by</span>
-                    <AgenticDevStudioLogo className="h-7 w-7 mx-1.5" />
-                    <span className="whitespace-nowrap">AgenticDev</span>
-                  </a>
                 </div>
               </div>
             </div>
@@ -119,7 +108,7 @@ async function GithubButton() {
       >
         <GithubIcon className="h-4 w-4" />
         <span className="whitespace-nowrap">
-          {starsCount ? `Fork on Github (${starsCount} Stars)` : "Fork on Github"}
+          {starsCount ? `View on Github (${starsCount} Stars)` : "View on Github"}
         </span>
       </a>
     </Button>
@@ -137,7 +126,7 @@ function GithubButtonFallback() {
         className="flex items-center justify-center space-x-2"
       >
         <GithubIcon className="h-4 w-4" />
-        <span className="whitespace-nowrap">Fork on Github</span>
+        <span className="whitespace-nowrap">View on Github</span>
       </a>
     </Button>
   );
