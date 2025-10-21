@@ -78,6 +78,13 @@
       "when": 1761057212324,
       "tag": "0010_init",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1761073104847,
+      "tag": "0011_add_stripe_fields_to_orders",
+      "breakpoints": true
     }
   ]
 }

@@ -1,30 +1,42 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+"use client";
+
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export interface CartItem {
   id: string;
-  productId: string;
-  variantId?: string;
   name: string;
+  description?: string;
   price: number;
   quantity: number;
   image?: string;
-  attributes?: Record<string, string>;
+  variant?: {
+    id: string;
+    name: string;
+    value: string;
+  }[];
+  teamId: string;
 }
 
-export interface CartState {
+interface CartState {
   items: CartItem[];
   isOpen: boolean;
-  total: number;
-  itemCount: number;
 
   // Actions
-  addItem: (item: Omit<CartItem, 'id'>) => void;
+  addItem: (item: Omit<CartItem, "quantity">) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   toggleCart: () => void;
-  setCartOpen: (open: boolean) => void;
+  openCart: () => void;
+  closeCart: () => void;
+
+  // Computed values
+  itemCount: number;
+  total: number;
+  subtotal: number;
+  tax: number;
+  shipping: number;
 }
 
 export const useCartStore = create<CartState>()(
@@ -32,42 +44,30 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       isOpen: false,
-      total: 0,
-      itemCount: 0,
 
       addItem: (item) => {
-        const { items } = get();
-        const existingItem = items.find(
-          (i) => i.productId === item.productId && i.variantId === item.variantId
-        );
+        const items = get().items;
+        const existingItem = items.find(i => i.id === item.id);
 
         if (existingItem) {
-          set((state) => ({
-            items: state.items.map((i) =>
-              i.id === existingItem.id
-                ? { ...i, quantity: i.quantity + item.quantity }
+          set({
+            items: items.map(i =>
+              i.id === item.id
+                ? { ...i, quantity: i.quantity + 1 }
                 : i
-            ),
-          }));
+            )
+          });
         } else {
-          const newItem: CartItem = {
-            ...item,
-            id: `${item.productId}-${item.variantId || 'default'}-${Date.now()}`,
-          };
-          set((state) => ({
-            items: [...state.items, newItem],
-          }));
+          set({
+            items: [...items, { ...item, quantity: 1 }]
+          });
         }
-
-        // Update totals
-        get().updateTotals();
       },
 
       removeItem: (id) => {
-        set((state) => ({
-          items: state.items.filter((item) => item.id !== id),
-        }));
-        get().updateTotals();
+        set({
+          items: get().items.filter(item => item.id !== id)
+        });
       },
 
       updateQuantity: (id, quantity) => {
@@ -76,36 +76,54 @@ export const useCartStore = create<CartState>()(
           return;
         }
 
-        set((state) => ({
-          items: state.items.map((item) =>
+        set({
+          items: get().items.map(item =>
             item.id === id ? { ...item, quantity } : item
-          ),
-        }));
-        get().updateTotals();
+          )
+        });
       },
 
       clearCart: () => {
         set({ items: [] });
-        get().updateTotals();
       },
 
       toggleCart: () => {
-        set((state) => ({ isOpen: !state.isOpen }));
+        set({ isOpen: !get().isOpen });
       },
 
-      setCartOpen: (open) => {
-        set({ isOpen: open });
+      openCart: () => {
+        set({ isOpen: true });
       },
 
-      updateTotals: () => {
-        const { items } = get();
-        const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-        set({ total, itemCount });
+      closeCart: () => {
+        set({ isOpen: false });
+      },
+
+      get itemCount() {
+        return get().items.reduce((sum, item) => sum + item.quantity, 0);
+      },
+
+      get subtotal() {
+        return get().items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      },
+
+      get tax() {
+        // Simple 8% tax calculation
+        return get().subtotal * 0.08;
+      },
+
+      get shipping() {
+        const subtotal = get().subtotal;
+        // Free shipping over $50
+        return subtotal >= 50 ? 0 : 9.99;
+      },
+
+      get total() {
+        return get().subtotal + get().tax + get().shipping;
       },
     }),
     {
-      name: 'cart-storage',
+      name: "cart-storage",
       partialize: (state) => ({ items: state.items }),
     }
   )

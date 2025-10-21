@@ -166,23 +166,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ],
       },
     ],
-    projects: [
-      {
-        title: "Analytics",
-        url: "/dashboard/analytics" as Route,
-        icon: PieChart,
-      },
-      {
-        title: "Media Library",
-        url: "/dashboard/media" as Route,
-        icon: Frame,
-      },
-      {
-        title: "Shipping Zones",
-        url: "/dashboard/shipping" as Route,
-        icon: Map,
-      },
-    ],
+        projects: [
+          {
+            title: "Analytics",
+            url: "/dashboard/analytics" as Route,
+            icon: PieChart,
+          },
+          {
+            title: "Media Library",
+            url: "/dashboard/media" as Route,
+            icon: Frame,
+          },
+          {
+            title: "Shipping Zones",
+            url: "/dashboard/shipping" as Route,
+            icon: Map,
+          },
+          {
+            title: "Payments",
+            url: "/dashboard/payments" as Route,
+            icon: CreditCard,
+          },
+        ],
   }
 
   return (
