@@ -1,8 +1,9 @@
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CustomerForm } from "./_components/CustomerForm";
 import { 
   Users2, 
   UserPlus, 
@@ -135,7 +136,11 @@ function CustomersList() {
                   <Eye className="h-4 w-4 mr-2" />
                   View
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleEditCustomer(customer)}
+                >
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </Button>
@@ -187,6 +192,41 @@ function CustomersListSkeleton() {
 }
 
 export default function CustomersPage() {
+  const [showForm, setShowForm] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState(null);
+
+  const handleAddCustomer = () => {
+    setEditingCustomer(null);
+    setShowForm(true);
+  };
+
+  const handleEditCustomer = (customer: any) => {
+    setEditingCustomer(customer);
+    setShowForm(true);
+  };
+
+  const handleFormSubmit = (data: any) => {
+    console.log("Customer data:", data);
+    // TODO: Implement customer creation/update logic
+    setShowForm(false);
+    setEditingCustomer(null);
+  };
+
+  const handleFormCancel = () => {
+    setShowForm(false);
+    setEditingCustomer(null);
+  };
+
+  if (showForm) {
+    return (
+      <CustomerForm
+        customer={editingCustomer}
+        onSubmit={handleFormSubmit}
+        onCancel={handleFormCancel}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -209,7 +249,7 @@ export default function CustomersPage() {
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button>
+          <Button onClick={handleAddCustomer}>
             <UserPlus className="h-4 w-4 mr-2" />
             Add Customer
           </Button>
