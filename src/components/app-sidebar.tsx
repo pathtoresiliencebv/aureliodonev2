@@ -127,11 +127,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/dashboard/pricing" as Route,
         icon: DollarSign,
       },
-      {
-        title: "Online Store",
-        url: "/dashboard/store" as Route,
-        icon: Store,
-      },
+          {
+            title: "Online Store",
+            url: "/dashboard/store" as Route,
+            icon: Store,
+            items: [
+              {
+                title: "Store Settings",
+                url: "/dashboard/store" as Route,
+              },
+              {
+                title: "Theme Builder",
+                url: "/dashboard/store/theme-builder" as Route,
+              },
+            ],
+          },
       {
         title: "Settings",
         url: "/settings",
