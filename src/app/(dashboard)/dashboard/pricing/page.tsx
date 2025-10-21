@@ -179,9 +179,9 @@ export default function PricingPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Pricing Plans</h1>
+          <h1 className="text-3xl font-bold">Customer Pricing Plans</h1>
           <p className="text-muted-foreground">
-            Manage your subscription plans and pricing
+            Manage subscription plans for your customers (store owners)
           </p>
         </div>
         <div className="flex space-x-2">
@@ -250,9 +250,9 @@ export default function PricingPage() {
       {/* Pricing Plans */}
       <Card>
         <CardHeader>
-          <CardTitle>Subscription Plans</CardTitle>
+          <CardTitle>Customer Subscription Plans</CardTitle>
           <CardDescription>
-            Configure and manage your pricing plans
+            Configure and manage pricing plans for your customers (store owners)
           </CardDescription>
         </CardHeader>
         <CardContent>
