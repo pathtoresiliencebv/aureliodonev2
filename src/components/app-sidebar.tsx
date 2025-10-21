@@ -13,6 +13,13 @@ import {
   SquareTerminal,
   CreditCard,
   Users,
+  Package,
+  ShoppingBag,
+  BarChart3,
+  Users2,
+  Tag,
+  DollarSign,
+  Store,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -91,19 +98,39 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         isActive: true,
       },
       {
-        title: "Teams",
-        url: "/dashboard/teams" as Route,
-        icon: Users,
+        title: "Orders",
+        url: "/dashboard/orders" as Route,
+        icon: ShoppingBag,
       },
-      ...(!DISABLE_CREDIT_BILLING_SYSTEM ? [{
-        title: "Marketplace",
-        url: "/dashboard/marketplace" as Route,
-        icon: ShoppingCart,
-      }] : []),
       {
-        title: "Billing",
-        url: "/dashboard/billing",
-        icon: CreditCard,
+        title: "Products",
+        url: "/dashboard/products" as Route,
+        icon: Package,
+      },
+      {
+        title: "Inventory",
+        url: "/dashboard/inventory" as Route,
+        icon: BarChart3,
+      },
+      {
+        title: "Customers",
+        url: "/dashboard/customers" as Route,
+        icon: Users2,
+      },
+      {
+        title: "Promotions",
+        url: "/dashboard/promotions" as Route,
+        icon: Tag,
+      },
+      {
+        title: "Pricing",
+        url: "/dashboard/pricing" as Route,
+        icon: DollarSign,
+      },
+      {
+        title: "Online Store",
+        url: "/dashboard/store" as Route,
+        icon: Store,
       },
       {
         title: "Settings",
@@ -131,18 +158,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ],
     projects: [
       {
-        title: "Design Engineering",
-        url: "#",
-        icon: Frame,
-      },
-      {
-        title: "Sales & Marketing",
-        url: "#",
+        title: "Analytics",
+        url: "/dashboard/analytics" as Route,
         icon: PieChart,
       },
       {
-        title: "Travel",
-        url: "#",
+        title: "Media Library",
+        url: "/dashboard/media" as Route,
+        icon: Frame,
+      },
+      {
+        title: "Shipping Zones",
+        url: "/dashboard/shipping" as Route,
         icon: Map,
       },
     ],
