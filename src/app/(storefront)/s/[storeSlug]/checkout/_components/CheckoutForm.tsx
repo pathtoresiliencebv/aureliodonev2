@@ -89,21 +89,55 @@ export function CheckoutForm({ storeSlug }: CheckoutFormProps) {
     setIsSubmitting(true);
 
     try {
-      // Here you would integrate with your payment processor (Stripe, etc.)
-      console.log("Checkout data:", data);
+      // Create order in database first
+      const orderResponse = await fetch('/api/orders/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: items,
+          billingAddress: data.billingAddress,
+          shippingAddress: data.shippingAddress,
+          shippingMethod: data.shippingMethod,
+          paymentMethod: data.paymentMethod,
+          teamSlug: storeSlug,
+        }),
+      });
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (!orderResponse.ok) {
+        const error = await orderResponse.json();
+        throw new Error(error.error || 'Failed to create order');
+      }
 
-      toast.success("Order placed successfully!");
+      const { orderId } = await orderResponse.json();
 
-      // Clear cart and redirect to success page
-      useCartStore.getState().clearCart();
-      window.location.href = `/s/${storeSlug}/checkout/success`;
+      // Create Stripe checkout session
+      const checkoutResponse = await fetch('/api/checkout/create-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId,
+          successUrl: `${window.location.origin}/s/${storeSlug}/checkout/success?orderId=${orderId}`,
+          cancelUrl: `${window.location.origin}/s/${storeSlug}/checkout`,
+        }),
+      });
+
+      if (!checkoutResponse.ok) {
+        const error = await checkoutResponse.json();
+        throw new Error(error.error || 'Failed to create checkout session');
+      }
+
+      const { url } = await checkoutResponse.json();
+
+      // Redirect to Stripe checkout
+      window.location.href = url;
 
     } catch (error) {
       console.error("Checkout error:", error);
-      toast.error("Failed to place order. Please try again.");
+      toast.error(error instanceof Error ? error.message : 'Failed to place order. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

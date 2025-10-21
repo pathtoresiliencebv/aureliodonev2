@@ -1,9 +1,12 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Package, Mail, ArrowRight, Download } from "lucide-react";
+import { formatCurrency } from "@/utils/format-currency";
+import { formatDate } from "@/utils/format-date";
 
 interface CheckoutSuccessContentProps {
   storeSlug: string;
@@ -11,9 +14,62 @@ interface CheckoutSuccessContentProps {
   sessionId?: string;
 }
 
+interface OrderDetails {
+  id: string;
+  orderNumber: string;
+  status: string;
+  totalAmount: number;
+  currency: string;
+  createdAt: string;
+  shippingAddress: any;
+  billingAddress: any;
+  lineItems: Array<{
+    productName: string;
+    variantName?: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+  }>;
+}
+
 export function CheckoutSuccessContent({ storeSlug, orderId, sessionId }: CheckoutSuccessContentProps) {
-  // In a real app, you would fetch order details using orderId or sessionId
-  const orderNumber = orderId || "ORD-12345";
+  const [order, setOrder] = useState<OrderDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (orderId) {
+      fetchOrderDetails(orderId);
+    } else {
+      setLoading(false);
+    }
+  }, [orderId]);
+
+  const fetchOrderDetails = async (orderId: string) => {
+    try {
+      const response = await fetch(`/api/orders/${orderId}`);
+      if (response.ok) {
+        const orderData = await response.json();
+        setOrder(orderData);
+      }
+    } catch (error) {
+      console.error("Failed to fetch order details:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-8">
+        <div className="text-center">
+          <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full animate-pulse mb-4" />
+          <h1 className="text-3xl font-bold mb-2">Loading order details...</h1>
+        </div>
+      </div>
+    );
+  }
+
+  const orderNumber = order?.orderNumber || orderId || "ORD-12345";
   const estimatedDelivery = "3-5 business days";
 
   return (
