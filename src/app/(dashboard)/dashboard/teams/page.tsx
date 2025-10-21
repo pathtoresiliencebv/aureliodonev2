@@ -42,7 +42,7 @@ export default async function TeamsIndexPage() {
 
   let teams: TeamItem[] = [];
   if (result?.success && result.data) {
-    teams = result.data;
+    teams = result.data as TeamItem[];
   }
 
   if (error) {

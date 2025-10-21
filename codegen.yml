@@ -1,0 +1,13 @@
+schema: ${SALEOR_API_URL}
+documents: './src/lib/saleor/**/*.ts'
+generates:
+  src/lib/saleor/generated.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+    config:
+      scalars:
+        DateTime: string
+        Date: string
+        JSON: Record<string, any>
+        Upload: File

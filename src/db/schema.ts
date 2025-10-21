@@ -198,6 +198,17 @@ export const TEAM_PERMISSIONS = {
   EDIT_COMPONENTS: 'edit_components',
   DELETE_COMPONENTS: 'delete_components',
 
+  // E-commerce permissions
+  MANAGE_PRODUCTS: 'manage_products',
+  VIEW_PRODUCTS: 'view_products',
+  MANAGE_ORDERS: 'manage_orders',
+  VIEW_ORDERS: 'view_orders',
+  PROCESS_FULFILLMENT: 'process_fulfillment',
+  MANAGE_CUSTOMERS: 'manage_customers',
+  VIEW_CUSTOMERS: 'view_customers',
+  MANAGE_STORE_SETTINGS: 'manage_store_settings',
+  VIEW_ANALYTICS: 'view_analytics',
+
   // Add more as needed
 } as const;
 
@@ -216,8 +227,17 @@ export const teamTable = sqliteTable("team", {
   planId: text({ length: 100 }),
   planExpiresAt: integer({ mode: "timestamp" }),
   creditBalance: integer().default(0).notNull(),
+  // Store-specific fields
+  saleorApiUrl: text({ length: 500 }),
+  saleorApiToken: text({ length: 500 }),
+  storeDomain: text({ length: 255 }),
+  storeStatus: text({
+    enum: ['active', 'inactive', 'suspended'] as [string, ...string[]]
+  }).notNull().default('inactive'),
+  storeTheme: text({ mode: 'json' }).$type<Record<string, unknown>>(),
 }, (table) => ([
   index('team_slug_idx').on(table.slug),
+  index('team_store_domain_idx').on(table.storeDomain),
 ]));
 
 // Team membership table
@@ -282,10 +302,202 @@ export const teamInvitationTable = sqliteTable("team_invitation", {
   index('team_invitation_token_idx').on(table.token),
 ]));
 
+// E-commerce tables
+
+// Product table
+export const productTable = sqliteTable("product", {
+  ...commonColumns,
+  id: text().primaryKey().$defaultFn(() => `prod_${createId()}`).notNull(),
+  teamId: text().notNull().references(() => teamTable.id),
+  saleorProductId: text({ length: 255 }).notNull(),
+  sku: text({ length: 100 }),
+  name: text({ length: 255 }).notNull(),
+  description: text({ length: 5000 }),
+  price: integer().notNull(), // Price in cents
+  compareAtPrice: integer(),
+  inventory: integer().default(0).notNull(),
+  status: text({
+    enum: ['draft', 'published', 'archived'] as [string, ...string[]]
+  }).notNull().default('draft'),
+  images: text({ mode: 'json' }).$type<string[]>(),
+  categoryId: text().references(() => categoryTable.id),
+  variants: text({ mode: 'json' }).$type<Record<string, unknown>>(),
+  metadata: text({ mode: 'json' }).$type<Record<string, unknown>>(),
+}, (table) => ([
+  index('product_team_id_idx').on(table.teamId),
+  index('product_saleor_id_idx').on(table.saleorProductId),
+  index('product_sku_idx').on(table.sku),
+  index('product_status_idx').on(table.status),
+  index('product_category_idx').on(table.categoryId),
+]));
+
+// Category table
+export const categoryTable = sqliteTable("category", {
+  ...commonColumns,
+  id: text().primaryKey().$defaultFn(() => `cat_${createId()}`).notNull(),
+  teamId: text().notNull().references(() => teamTable.id),
+  saleorCategoryId: text({ length: 255 }).notNull(),
+  name: text({ length: 255 }).notNull(),
+  slug: text({ length: 255 }).notNull(),
+  description: text({ length: 1000 }),
+  parentId: text(),
+  sortOrder: integer().default(0).notNull(),
+  imageUrl: text({ length: 600 }),
+}, (table) => ([
+  index('category_team_id_idx').on(table.teamId),
+  index('category_saleor_id_idx').on(table.saleorCategoryId),
+  index('category_slug_idx').on(table.slug),
+  index('category_parent_idx').on(table.parentId),
+]));
+
+// Order table
+export const orderTable = sqliteTable("order", {
+  ...commonColumns,
+  id: text().primaryKey().$defaultFn(() => `ord_${createId()}`).notNull(),
+  teamId: text().notNull().references(() => teamTable.id),
+  saleorOrderId: text({ length: 255 }).notNull(),
+  orderNumber: text({ length: 50 }).notNull(),
+  customerId: text().references(() => customerTable.id),
+  customerEmail: text({ length: 255 }).notNull(),
+  customerName: text({ length: 255 }),
+  status: text({
+    enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'refunded'] as [string, ...string[]]
+  }).notNull().default('pending'),
+  totalAmount: integer().notNull(), // Total in cents
+  currency: text({ length: 3 }).notNull().default('USD'),
+  shippingAddress: text({ mode: 'json' }).$type<Record<string, unknown>>(),
+  billingAddress: text({ mode: 'json' }).$type<Record<string, unknown>>(),
+  lineItems: text({ mode: 'json' }).$type<Record<string, unknown>[]>(),
+  fulfillmentStatus: text({
+    enum: ['unfulfilled', 'partially_fulfilled', 'fulfilled'] as [string, ...string[]]
+  }).notNull().default('unfulfilled'),
+  paymentStatus: text({
+    enum: ['pending', 'paid', 'partially_paid', 'refunded'] as [string, ...string[]]
+  }).notNull().default('pending'),
+}, (table) => ([
+  index('order_team_id_idx').on(table.teamId),
+  index('order_saleor_id_idx').on(table.saleorOrderId),
+  index('order_number_idx').on(table.orderNumber),
+  index('order_customer_email_idx').on(table.customerEmail),
+  index('order_status_idx').on(table.status),
+]));
+
+// Customer table
+export const customerTable = sqliteTable("customer", {
+  ...commonColumns,
+  id: text().primaryKey().$defaultFn(() => `cust_${createId()}`).notNull(),
+  teamId: text().notNull().references(() => teamTable.id),
+  saleorCustomerId: text({ length: 255 }).notNull(),
+  email: text({ length: 255 }).notNull(),
+  firstName: text({ length: 255 }),
+  lastName: text({ length: 255 }),
+  phone: text({ length: 50 }),
+  defaultShippingAddress: text({ mode: 'json' }).$type<Record<string, unknown>>(),
+  defaultBillingAddress: text({ mode: 'json' }).$type<Record<string, unknown>>(),
+  totalOrders: integer().default(0).notNull(),
+  totalSpent: integer().default(0).notNull(), // Total spent in cents
+}, (table) => ([
+  index('customer_team_id_idx').on(table.teamId),
+  index('customer_saleor_id_idx').on(table.saleorCustomerId),
+  index('customer_email_idx').on(table.email),
+]));
+
+// Collection table
+export const collectionTable = sqliteTable("collection", {
+  ...commonColumns,
+  id: text().primaryKey().$defaultFn(() => `coll_${createId()}`).notNull(),
+  teamId: text().notNull().references(() => teamTable.id),
+  saleorCollectionId: text({ length: 255 }).notNull(),
+  name: text({ length: 255 }).notNull(),
+  slug: text({ length: 255 }).notNull(),
+  description: text({ length: 1000 }),
+  imageUrl: text({ length: 600 }),
+  isPublished: integer().default(0).notNull(),
+  products: text({ mode: 'json' }).$type<string[]>(),
+}, (table) => ([
+  index('collection_team_id_idx').on(table.teamId),
+  index('collection_saleor_id_idx').on(table.saleorCollectionId),
+  index('collection_slug_idx').on(table.slug),
+]));
+
+// Shipping method table
+export const shippingMethodTable = sqliteTable("shipping_method", {
+  ...commonColumns,
+  id: text().primaryKey().$defaultFn(() => `ship_${createId()}`).notNull(),
+  teamId: text().notNull().references(() => teamTable.id),
+  saleorShippingMethodId: text({ length: 255 }).notNull(),
+  name: text({ length: 255 }).notNull(),
+  description: text({ length: 1000 }),
+  price: integer().notNull(), // Price in cents
+  minOrderValue: integer(),
+  maxOrderValue: integer(),
+  deliveryTimeMin: integer(), // Days
+  deliveryTimeMax: integer(), // Days
+}, (table) => ([
+  index('shipping_team_id_idx').on(table.teamId),
+  index('shipping_saleor_id_idx').on(table.saleorShippingMethodId),
+]));
+
+// Tax configuration table
+export const taxConfigurationTable = sqliteTable("tax_configuration", {
+  ...commonColumns,
+  id: text().primaryKey().$defaultFn(() => `tax_${createId()}`).notNull(),
+  teamId: text().notNull().references(() => teamTable.id),
+  taxName: text({ length: 255 }).notNull(),
+  taxRate: integer().notNull(), // Rate in basis points (e.g., 1000 = 10%)
+  applyToShipping: integer().default(0).notNull(),
+  regions: text({ mode: 'json' }).$type<string[]>(),
+}, (table) => ([
+  index('tax_team_id_idx').on(table.teamId),
+]));
+
+// Inventory table
+export const inventoryTable = sqliteTable("inventory", {
+  ...commonColumns,
+  id: text().primaryKey().$defaultFn(() => `inv_${createId()}`).notNull(),
+  teamId: text().notNull().references(() => teamTable.id),
+  productId: text().notNull().references(() => productTable.id),
+  variantId: text({ length: 255 }),
+  warehouseId: text({ length: 255 }),
+  quantityAvailable: integer().default(0).notNull(),
+  quantityReserved: integer().default(0).notNull(),
+  lowStockThreshold: integer().default(5).notNull(),
+}, (table) => ([
+  index('inventory_team_id_idx').on(table.teamId),
+  index('inventory_product_idx').on(table.productId),
+  index('inventory_variant_idx').on(table.variantId),
+]));
+
+// Analytics events table
+export const analyticsEventTable = sqliteTable("analytics_event", {
+  ...commonColumns,
+  id: text().primaryKey().$defaultFn(() => `evt_${createId()}`).notNull(),
+  teamId: text().notNull().references(() => teamTable.id),
+  eventType: text({ length: 100 }).notNull(),
+  productId: text().references(() => productTable.id),
+  sessionId: text({ length: 255 }),
+  timestamp: integer({ mode: "timestamp" }).$defaultFn(() => new Date()).notNull(),
+  metadata: text({ mode: 'json' }).$type<Record<string, unknown>>(),
+}, (table) => ([
+  index('analytics_team_id_idx').on(table.teamId),
+  index('analytics_event_type_idx').on(table.eventType),
+  index('analytics_product_idx').on(table.productId),
+  index('analytics_timestamp_idx').on(table.timestamp),
+]));
+
 export const teamRelations = relations(teamTable, ({ many }) => ({
   memberships: many(teamMembershipTable),
   invitations: many(teamInvitationTable),
   roles: many(teamRoleTable),
+  products: many(productTable),
+  categories: many(categoryTable),
+  orders: many(orderTable),
+  customers: many(customerTable),
+  collections: many(collectionTable),
+  shippingMethods: many(shippingMethodTable),
+  taxConfigurations: many(taxConfigurationTable),
+  inventory: many(inventoryTable),
+  analyticsEvents: many(analyticsEventTable),
 }));
 
 export const teamRoleRelations = relations(teamRoleTable, ({ one }) => ({
@@ -353,6 +565,95 @@ export const passKeyCredentialRelations = relations(passKeyCredentialTable, ({ o
   }),
 }));
 
+// E-commerce relations
+export const productRelations = relations(productTable, ({ one, many }) => ({
+  team: one(teamTable, {
+    fields: [productTable.teamId],
+    references: [teamTable.id],
+  }),
+  category: one(categoryTable, {
+    fields: [productTable.categoryId],
+    references: [categoryTable.id],
+  }),
+  inventory: many(inventoryTable),
+  analyticsEvents: many(analyticsEventTable),
+}));
+
+export const categoryRelations = relations(categoryTable, ({ one, many }) => ({
+  team: one(teamTable, {
+    fields: [categoryTable.teamId],
+    references: [teamTable.id],
+  }),
+  parent: one(categoryTable, {
+    fields: [categoryTable.parentId],
+    references: [categoryTable.id],
+  }),
+  children: many(categoryTable),
+  products: many(productTable),
+}));
+
+export const orderRelations = relations(orderTable, ({ one }) => ({
+  team: one(teamTable, {
+    fields: [orderTable.teamId],
+    references: [teamTable.id],
+  }),
+  customer: one(customerTable, {
+    fields: [orderTable.customerId],
+    references: [customerTable.id],
+  }),
+}));
+
+export const customerRelations = relations(customerTable, ({ one, many }) => ({
+  team: one(teamTable, {
+    fields: [customerTable.teamId],
+    references: [teamTable.id],
+  }),
+  orders: many(orderTable),
+}));
+
+export const collectionRelations = relations(collectionTable, ({ one }) => ({
+  team: one(teamTable, {
+    fields: [collectionTable.teamId],
+    references: [teamTable.id],
+  }),
+}));
+
+export const shippingMethodRelations = relations(shippingMethodTable, ({ one }) => ({
+  team: one(teamTable, {
+    fields: [shippingMethodTable.teamId],
+    references: [teamTable.id],
+  }),
+}));
+
+export const taxConfigurationRelations = relations(taxConfigurationTable, ({ one }) => ({
+  team: one(teamTable, {
+    fields: [taxConfigurationTable.teamId],
+    references: [teamTable.id],
+  }),
+}));
+
+export const inventoryRelations = relations(inventoryTable, ({ one }) => ({
+  team: one(teamTable, {
+    fields: [inventoryTable.teamId],
+    references: [teamTable.id],
+  }),
+  product: one(productTable, {
+    fields: [inventoryTable.productId],
+    references: [productTable.id],
+  }),
+}));
+
+export const analyticsEventRelations = relations(analyticsEventTable, ({ one }) => ({
+  team: one(teamTable, {
+    fields: [analyticsEventTable.teamId],
+    references: [teamTable.id],
+  }),
+  product: one(productTable, {
+    fields: [analyticsEventTable.productId],
+    references: [productTable.id],
+  }),
+}));
+
 export type User = InferSelectModel<typeof userTable>;
 export type PassKeyCredential = InferSelectModel<typeof passKeyCredentialTable>;
 export type CreditTransaction = InferSelectModel<typeof creditTransactionTable>;
@@ -361,3 +662,14 @@ export type Team = InferSelectModel<typeof teamTable>;
 export type TeamMembership = InferSelectModel<typeof teamMembershipTable>;
 export type TeamRole = InferSelectModel<typeof teamRoleTable>;
 export type TeamInvitation = InferSelectModel<typeof teamInvitationTable>;
+
+// E-commerce types
+export type Product = InferSelectModel<typeof productTable>;
+export type Category = InferSelectModel<typeof categoryTable>;
+export type Order = InferSelectModel<typeof orderTable>;
+export type Customer = InferSelectModel<typeof customerTable>;
+export type Collection = InferSelectModel<typeof collectionTable>;
+export type ShippingMethod = InferSelectModel<typeof shippingMethodTable>;
+export type TaxConfiguration = InferSelectModel<typeof taxConfigurationTable>;
+export type Inventory = InferSelectModel<typeof inventoryTable>;
+export type AnalyticsEvent = InferSelectModel<typeof analyticsEventTable>;
